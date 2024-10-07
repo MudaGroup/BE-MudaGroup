@@ -71,7 +71,7 @@ export const updateWorshipPlace = async(req, res) => {
     });
     if (!product) return res.status(404).json({ msg: "No Data Found" });
     let fileName = "";
-    if (req.files === null) {
+    if (req.files || !req.files.file) {
         fileName = product.image;
     } else {
         const file = req.files.file;
@@ -86,7 +86,14 @@ export const updateWorshipPlace = async(req, res) => {
             return res.status(422).json({ msg: "Image must be less than 10 MB" });
 
         const filepath = `./public/image/worshipPlace/${product.image}`;
-        fs.unlinkSync(filepath);
+        if (fs.existsSync(filepath)) {
+            fs.unlink(filepath, (err) => {
+                if (err) {
+                    console.error(err.message);
+                    return res.status(500).json({ msg: "Error deleting old image" });
+                }
+            });
+        }
 
         file.mv(`./public/image/worshipPlace/${fileName}`, (err) => {
             if (err) return res.status(500).json({ msg: err.message });

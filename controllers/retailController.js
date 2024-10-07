@@ -71,7 +71,7 @@ export const updateRetail = async(req, res) => {
     });
     if (!product) return res.status(404).json({ msg: "No Data Found" });
     let fileName = "";
-    if (req.files === null) {
+    if (!req.files || !req.files.file) {
         fileName = product.image;
     } else {
         const file = req.files.file;
@@ -86,7 +86,14 @@ export const updateRetail = async(req, res) => {
             return res.status(422).json({ msg: "Image must be less than 10 MB" });
 
         const filepath = `./public/image/retail/${product.image}`;
-        fs.unlinkSync(filepath);
+        if (fs.existsSync(filepath)) {
+            fs.unlink(filepath, (err) => {
+                if (err) {
+                    console.error(err.message);
+                    return res.status(500).json({ msg: "Error deleting old image" });
+                }
+            })
+        }
 
         file.mv(`./public/image/retail/${fileName}`, (err) => {
             if (err) return res.status(500).json({ msg: err.message });
@@ -98,7 +105,7 @@ export const updateRetail = async(req, res) => {
     const project_status = req.body.project_status;
     const project_location = req.body.project_location;
     const address = req.body.address;
-    const url = `${req.protocol}://${req.get("host")}/image/retail/${fileName};`;
+    const url = `${req.protocol}://${req.get("host")}/image/retail/${fileName}`;
 
     try {
         await retailModel.update({
@@ -130,7 +137,7 @@ export const deleteRetail = async(req, res) => {
     try {
         const filepath = `./public/image/retail/${product.image}`;
         fs.unlinkSync(filepath);
-        await cageModel.destroy({
+        await retailModel.destroy({
             where: {
                 id: req.params.id,
             },
