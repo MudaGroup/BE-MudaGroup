@@ -9,6 +9,7 @@ import missionRoute from "./routes/missionRoute.js";
 import cageRoute from "./routes/cageRoute.js";
 import worshipPlaceRoute from "./routes/worshipPlaceRoute.js";
 import buildingRoute from "./routes/buildingRoute.js";
+import retailRoute from "./routes/retailRoute.js";
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use(missionRoute);
 app.use(cageRoute);
 app.use(worshipPlaceRoute);
 app.use(buildingRoute);
+app.use(retailRoute);
 
 
 app.listen(5000, ()=> console.log('Server up and running...'));
