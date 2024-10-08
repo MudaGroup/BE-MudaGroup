@@ -44,15 +44,6 @@ export const saveCage = (req, res) => {
     if (fileSize > 10000000)
         return res.status(422).json({ msg: "Image must be less than 10 MB"});
 
-    const filepath = `./public/image/retail/${product.image}`;
-    if (fs.existsSync(filepath)) {
-        fs.unlink(filepath, (err) => {
-            if (err) {
-                console.error(err.message);
-                return res.status(500).json({ msg: "Error deleting old image" });
-            }
-        });
-    }
     file.mv(`./public/image/cage/${fileName}`, async(err) => {
         if(err) return res.status(500).json({msg: err.message});
         try {
