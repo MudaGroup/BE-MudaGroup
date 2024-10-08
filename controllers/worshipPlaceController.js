@@ -89,7 +89,7 @@ export const updateWorshipPlace = async(req, res) => {
         if (fs.existsSync(filepath)) {
             fs.unlink(filepath, (err) => {
                 if (err) {
-                    console.error(err.message);
+                console.error(err.message);
                     return res.status(500).json({ msg: "Error deleting old image" });
                 }
             });
