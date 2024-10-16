@@ -27,7 +27,7 @@ export const getBuildingById = async(req, res) => {
 export const saveBuilding = (req, res) => {
     if (req.files === null)
         return res.status(400).json({ msg: "No Files Uploaded" });
-    const name = req.body.title;
+    const name = req.body.name;
     const desc = req.body.desc;
     const project_status = req.body.project_status;
     const project_location = req.body.project_location;
@@ -100,7 +100,7 @@ export const updateBuilding = async(req, res) => {
         });
     }
 
-    const name = req.body.title;
+    const name = req.body.name;
     const desc = req.body.desc;
     const project_status = req.body.project_status;
     const project_location = req.body.project_location;

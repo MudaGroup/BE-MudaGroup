@@ -71,7 +71,7 @@ export const deleteMission = async(req, res) => {
     });
     if (!product) return res.status(404).json({ msg: "No Data Found" });
     try {
-        await visionModel.destroy({
+        await missionModel.destroy({
             where: {
                 id: req.params.id,
             },

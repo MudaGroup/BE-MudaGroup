@@ -27,7 +27,7 @@ export const getProfileById = async(req, res) => {
 export const saveProfile = (req, res) => {
     if (req.files === null)
         return res.status(400).json({ msg: "No files Uploaded"});
-    const name = req.body.title;
+    const name = req.body.name;
     const file = req.files.file;
     const fileSize = file.data.length;
     const ext = path.extname(file.name);
@@ -86,7 +86,7 @@ export const updateProfile = async(req, res) => {
         })
     }
 
-    const name = req.body.title;
+    const name = req.body.name;
     const url = `${req.protocol}://${req.get('host')}/slide/${fileName}`;
 
     try {

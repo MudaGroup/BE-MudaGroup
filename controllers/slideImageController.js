@@ -2,31 +2,39 @@ import path from "path";
 import fs from "fs";
 import slideImageModel from "../models/slideImageModel.js";
 
-export const getSlideImage = async(req, res) => {
+export const getSlideImage = async (req, res) => {
     try {
         const response = await slideImageModel.findAll();
         res.json(response);
     } catch (error) {
-        console.log(error.message);
+        console.error(error.message);
+        res.status(500).json({ msg: "Failed to retrieve images" });
     }
 };
 
-export const getSlideImageById = async(req, res) => {
+export const getSlideImageById = async (req, res) => {
     try {
         const response = await slideImageModel.findOne({
             where: {
                 id: req.params.id,
             },
         });
+        if (!response) return res.status(404).json({ msg: "No Data Found" });
         res.json(response);
     } catch (error) {
         console.error(error.message);
+        res.status(500).json({ msg: "Failed to retrieve image" });
     }
 };
 
 export const saveSlideImage = (req, res) => {
-    if (req.files === null)
-        return res.status(400).json({ msg: "No files Uploaded"});
+    console.log("Received request to save slide image");
+
+    if (!req.files || !req.files.file) {
+        console.log("No files uploaded");
+        return res.status(400).json({ msg: "No files Uploaded" });
+    }
+
     const name = req.body.title;
     const file = req.files.file;
     const fileSize = file.data.length;
@@ -35,38 +43,49 @@ export const saveSlideImage = (req, res) => {
     const url = `${req.protocol}://${req.get("host")}/image/slide/${fileName}`;
     const allowedType = [".png", ".jpg", ".jpeg"];
 
-    if (!allowedType.includes(ext.toLowerCase()))
+    console.log(`File extension: ${ext}`);
+    console.log(`File size: ${fileSize} bytes`);
+
+    if (!allowedType.includes(ext.toLowerCase())) {
+        console.log("Invalid image type");
         return res.status(422).json({ msg: "Invalid Image" });
-    if (fileSize > 10000000)
+    }
+    if (fileSize > 10000000) {
+        console.log("Image too large");
         return res.status(422).json({ msg: "Image must be less than 10 MB" });
+    }
 
     file.mv(`./public/image/slide/${fileName}`, async (err) => {
-        if (err) return res.status(500).json({ msg: err.message });
+        if (err) {
+            console.log("Error moving file:", err.message);
+            return res.status(500).json({ msg: err.message });
+        }
+
         try {
             await slideImageModel.create({
                 name: name,
                 image: fileName,
-                url: url
+                url: url,
             });
-            res.status(201).json({ msg: "Product created successfully"});
+            res.status(201).json({ msg: "Product created successfully" });
         } catch (error) {
-            console.log(error.message);
+            console.error("Error creating product:", error.message);
             return res.status(500).json({ msg: "Failed to create product" });
-        };
+        }
     });
 };
 
-export const updateSlideImage = async(req, res) => {
+export const updateSlideImage = async (req, res) => {
     const product = await slideImageModel.findOne({
         where: {
             id: req.params.id,
         },
     });
     if (!product) return res.status(404).json({ msg: "No Data Found" });
-    let fileName = "";
-    if (req.files === null) {
-        fileName = product.image;
-    } else {
+
+    let fileName = product.image; // Default fileName is the existing image
+
+    if (req.files && req.files.file) {
         const file = req.files.file;
         const fileSize = file.data.length;
         const ext = path.extname(file.name);
@@ -79,33 +98,39 @@ export const updateSlideImage = async(req, res) => {
             return res.status(422).json({ msg: "Image must be less than 10 MB" });
 
         const filepath = `./public/image/slide/${product.image}`;
-        fs.unlinkSync(filepath);
+        if (fs.existsSync(filepath)) { // Cek apakah file ada sebelum menghapus
+            fs.unlinkSync(filepath);
+        }
 
-        file.mv(`./public/image/slide/${fileName}`, (err) => {
+        await file.mv(`./public/image/slide/${fileName}`, (err) => {
             if (err) return res.status(500).json({ msg: err.message });
-        })
+        });
     }
 
     const name = req.body.title;
-    const url = `${req.protocol}://${req.get('host')}/image/slide/${fileName}`;
+    const url = `${req.protocol}://${req.get("host")}/image/slide/${fileName}`;
 
     try {
-        await slideImageModel.update({
-            name: name,
-            image: fileName,
-            url: url
-        },{
-            where: {
-                id: req.params.id,
+        await slideImageModel.update(
+            {
+                name: name,
+                image: fileName,
+                url: url,
+            },
+            {
+                where: {
+                    id: req.params.id,
+                },
             }
-        });
-        res.status(200).json({ msg: "Product Update Success"});
+        );
+        res.status(200).json({ msg: "Product Update Success" });
     } catch (error) {
-        console.log(error.message);
+        console.error(error.message);
+        return res.status(500).json({ msg: "Failed to update product" });
     }
 };
 
-export const delteSlideImage = async(req, res) => {
+export const deleteSlideImage = async (req, res) => { // Perbaiki nama fungsi
     const product = await slideImageModel.findOne({
         where: {
             id: req.params.id,
@@ -114,7 +139,9 @@ export const delteSlideImage = async(req, res) => {
     if (!product) return res.status(404).json({ msg: "No Data Found" });
     try {
         const filepath = `./public/image/slide/${product.image}`;
-        fs.unlinkSync(filepath);
+        if (fs.existsSync(filepath)) { // Cek apakah file ada sebelum menghapus
+            fs.unlinkSync(filepath);
+        }
         await slideImageModel.destroy({
             where: {
                 id: req.params.id,
@@ -122,6 +149,7 @@ export const delteSlideImage = async(req, res) => {
         });
         res.status(200).json({ msg: "Product Deleted Successfully" });
     } catch (error) {
-        console.log(error.message);
+        console.error(error.message);
+        return res.status(500).json({ msg: "Failed to delete product" });
     }
 };
